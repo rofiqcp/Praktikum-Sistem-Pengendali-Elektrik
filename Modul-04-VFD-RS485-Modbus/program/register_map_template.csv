@@ -1,0 +1,9 @@
+symbol,manual_notation,software_address,access,function_code,scale_or_encoding,manual_page,verified_value
+REG_OUT_FREQ,,,R,,Hz/count,,
+REG_STATUS,,,R,,word/bit,,
+REG_FAULT,,,R,,fault code,,
+REG_FREQ_REF,,,R/W,,Hz/count,,
+REG_COMMAND,,,R/W,,command word,,
+COMMAND_STOP,,,,,value,,
+COMMAND_RUN_FORWARD,,,,,value,,
+COMMAND_RUN_REVERSE,,,,,value,,

@@ -1,13 +1,25 @@
 {
   "port": "/dev/ttyUSB0",
   "baudrate": 9600,
-  "parity": "N",
+  "parity": "E",
   "stopbits": 1,
+  "timeout_s": 1.0,
   "slave": 1,
+
+  "register_output_frequency": null,
+  "output_frequency_scale_hz_per_count": null,
+  "register_status": null,
+  "register_fault": null,
+
   "register_command": null,
   "register_frequency_ref": null,
-  "register_output_frequency": null,
   "frequency_scale_hz_per_count": null,
   "command_stop": null,
-  "command_run_forward": null
+  "command_run_forward": null,
+  "command_run_reverse": null,
+
+  "software_max_hz": 20.0,
+  "pre_run_stop_delay_s": 0.5,
+
+  "notes": "Fill register addresses, scaling, command words and serial settings from the exact WECON VFD manual used in the lab. software_max_hz is an additional lab software limit, not a substitute for VFD limits."
 }
