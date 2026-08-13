@@ -1,0 +1,13 @@
+{
+  "port": "/dev/ttyUSB0",
+  "baudrate": 9600,
+  "parity": "N",
+  "stopbits": 1,
+  "slave": 1,
+  "register_command": null,
+  "register_frequency_ref": null,
+  "register_output_frequency": null,
+  "frequency_scale_hz_per_count": null,
+  "command_stop": null,
+  "command_run_forward": null
+}
