@@ -77,17 +77,14 @@ void park(float alpha, float beta, float theta, float &id, float &iq);
 void invPark(float vd, float vq, float theta, float &alpha, float &beta);
 void svpwm(float alpha, float beta, float vbus, float &da, float &db, float &dc);
 
-#pragma push_macro("PI")
-#undef PI
-class PI {
+class PIController {
 public:
-  PI(float kp = 0, float ki = 0, float limit = 1) : kp(kp), ki(ki), limit(limit) {}
+  PIController(float kp = 0, float ki = 0, float limit = 1) : kp(kp), ki(ki), limit(limit) {}
   float update(float error, float dt);
   void reset(float value = 0) { integral = value; }
   float kp, ki, limit;
 private:
   float integral = 0;
 };
-#pragma pop_macro("PI")
 
 } // namespace ESC

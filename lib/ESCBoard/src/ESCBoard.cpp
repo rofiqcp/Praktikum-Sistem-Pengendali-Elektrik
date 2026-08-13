@@ -3,6 +3,12 @@
 
 namespace ESC {
 
+constexpr uint32_t Board::TIMER_CLOCK_HZ;
+constexpr float Board::ADC_REF;
+constexpr float Board::CURRENT_V_PER_A;
+constexpr float Board::VBUS_RATIO;
+constexpr float Board::INPUT_DIV_RATIO;
+
 uint32_t Board::_pwmHz = 12000;
 uint32_t Board::_deadtimeNs = 1000;
 float Board::_offsetIA = 1.65f;
@@ -28,13 +34,8 @@ float Board::clamp01(float x) {
   return x;
 }
 
-void Board::shutdown(bool active) {
-  digitalWrite(PIN_DRV_SD, active ? HIGH : LOW);
-}
-
-bool Board::isShutdown() {
-  return digitalRead(PIN_DRV_SD) == HIGH;
-}
+void Board::shutdown(bool active) { digitalWrite(PIN_DRV_SD, active ? HIGH : LOW); }
+bool Board::isShutdown() { return digitalRead(PIN_DRV_SD) == HIGH; }
 
 uint8_t Board::encodeDeadtime(uint32_t ns) {
   uint32_t ticks = (uint32_t)(((uint64_t)ns * TIMER_CLOCK_HZ + 999999999ULL) / 1000000000ULL);
@@ -60,7 +61,6 @@ uint8_t Board::encodeDeadtime(uint32_t ns) {
 void Board::configurePwmPins() {
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
-
   GPIO_InitTypeDef g = {};
   g.Mode = GPIO_MODE_AF_PP;
   g.Pull = GPIO_NOPULL;
@@ -86,19 +86,15 @@ void Board::setPwm(uint32_t pwmHz, uint32_t deadtimeNs) {
   if (pwmHz > 30000) pwmHz = 30000;
   _pwmHz = pwmHz;
   _deadtimeNs = deadtimeNs;
-
   __HAL_RCC_TIM1_CLK_ENABLE();
   TIM1->CR1 = 0;
   TIM1->CR2 = 0;
   TIM1->SMCR = 0;
   TIM1->PSC = 0;
-
   uint32_t arr = TIMER_CLOCK_HZ / (2UL * pwmHz);
   if (arr < 2) arr = 2;
   TIM1->ARR = arr - 1;
   TIM1->RCR = 0;
-
-  // PWM mode 1 + preload CH1/2/3.
   TIM1->CCMR1 = TIM_CCMR1_OC1PE | TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2 |
                 TIM_CCMR1_OC2PE | TIM_CCMR1_OC2M_1 | TIM_CCMR1_OC2M_2;
   TIM1->CCMR2 = TIM_CCMR2_OC3PE | TIM_CCMR2_OC3M_1 | TIM_CCMR2_OC3M_2;
@@ -106,11 +102,10 @@ void Board::setPwm(uint32_t pwmHz, uint32_t deadtimeNs) {
   TIM1->CCR2 = TIM1->ARR / 2;
   TIM1->CCR3 = TIM1->ARR / 2;
   TIM1->CCER = 0;
-
   uint8_t dtg = encodeDeadtime(deadtimeNs);
   TIM1->BDTR = TIM_BDTR_OSSR | TIM_BDTR_OSSI | TIM_BDTR_MOE | dtg;
   TIM1->EGR = TIM_EGR_UG;
-  TIM1->CR1 = TIM_CR1_ARPE | TIM_CR1_CMS_0 | TIM_CR1_CEN; // center-aligned mode 1
+  TIM1->CR1 = TIM_CR1_ARPE | TIM_CR1_CMS_0 | TIM_CR1_CEN;
 }
 
 uint32_t Board::dutyToCCR(float d) {
@@ -170,10 +165,9 @@ void Board::setSinglePhaseSPWM(float modulation, float angle) {
 
 void Board::sixStep(uint8_t sector, float duty) {
   duty = clamp01(duty);
-  if (duty > 0.95f) duty = 0.95f; // keep bootstrap refresh margin
+  if (duty > 0.95f) duty = 0.95f;
   floatAll();
-  delayMicroseconds(2); // commutation blanking for educational low-speed tests
-
+  delayMicroseconds(2);
   auto source = [&](uint8_t ch) {
     if (ch == 1) TIM1->CCR1 = dutyToCCR(duty);
     if (ch == 2) TIM1->CCR2 = dutyToCCR(duty);
@@ -186,14 +180,13 @@ void Board::sixStep(uint8_t sector, float duty) {
     if (ch == 3) TIM1->CCR3 = 0;
     setChannelEnable(ch, false, true);
   };
-
   switch (sector % 6) {
-    case 0: source(1); sink(2); break; // A+ B-
-    case 1: source(1); sink(3); break; // A+ C-
-    case 2: source(2); sink(3); break; // B+ C-
-    case 3: source(2); sink(1); break; // B+ A-
-    case 4: source(3); sink(1); break; // C+ A-
-    case 5: source(3); sink(2); break; // C+ B-
+    case 0: source(1); sink(2); break;
+    case 1: source(1); sink(3); break;
+    case 2: source(2); sink(3); break;
+    case 3: source(2); sink(1); break;
+    case 4: source(3); sink(1); break;
+    case 5: source(3); sink(2); break;
   }
 }
 
@@ -210,7 +203,6 @@ uint8_t Board::hallState() {
 }
 
 int8_t Board::hallSector(uint8_t state) {
-  // Default sequence: 001,101,100,110,010,011. Adjust if motor Hall wiring differs.
   static const int8_t map[8] = {-1, 0, 4, 5, 2, 1, 3, -1};
   return map[state & 7];
 }
@@ -218,7 +210,6 @@ int8_t Board::hallSector(uint8_t state) {
 void Board::beginEncoder() {
   __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_TIM4_CLK_ENABLE();
-
   GPIO_InitTypeDef g = {};
   g.Pin = GPIO_PIN_6 | GPIO_PIN_7;
   g.Mode = GPIO_MODE_AF_PP;
@@ -226,13 +217,12 @@ void Board::beginEncoder() {
   g.Speed = GPIO_SPEED_FREQ_HIGH;
   g.Alternate = GPIO_AF2_TIM4;
   HAL_GPIO_Init(GPIOB, &g);
-
   TIM4->CR1 = 0;
   TIM4->PSC = 0;
   TIM4->ARR = 0xFFFF;
   TIM4->CCMR1 = TIM_CCMR1_CC1S_0 | TIM_CCMR1_CC2S_0;
   TIM4->CCER = 0;
-  TIM4->SMCR = TIM_SMCR_SMS_0 | TIM_SMCR_SMS_1; // encoder mode 3
+  TIM4->SMCR = TIM_SMCR_SMS_0 | TIM_SMCR_SMS_1;
   TIM4->CNT = 0;
   TIM4->EGR = TIM_EGR_UG;
   TIM4->CR1 = TIM_CR1_CEN;
@@ -247,18 +237,10 @@ int32_t Board::sampleEncoder() {
   _encoderPos += delta;
   return delta;
 }
-
 int32_t Board::encoderPosition() { return _encoderPos; }
+void Board::zeroEncoder() { TIM4->CNT = 0; _encoderLast = 0; _encoderPos = 0; }
 
-void Board::zeroEncoder() {
-  TIM4->CNT = 0;
-  _encoderLast = 0;
-  _encoderPos = 0;
-}
-
-float Board::adcVolts(uint32_t pin) {
-  return (float)analogRead(pin) * ADC_REF / 4095.0f;
-}
+float Board::adcVolts(uint32_t pin) { return (float)analogRead(pin) * ADC_REF / 4095.0f; }
 
 void Board::calibrateCurrentOffsets(uint16_t samples) {
   shutdown(true);
@@ -323,7 +305,6 @@ void invPark(float vd, float vq, float theta, float &alpha, float &beta) {
 
 void svpwm(float alpha, float beta, float vbus, float &da, float &db, float &dc) {
   if (vbus < 1.0f) { da = db = dc = 0.5f; return; }
-  // Inverse Clarke phase voltages, then common-mode injection.
   float va = alpha;
   float vb = -0.5f * alpha + 0.86602540378f * beta;
   float vc = -0.5f * alpha - 0.86602540378f * beta;
@@ -338,7 +319,7 @@ void svpwm(float alpha, float beta, float vbus, float &da, float &db, float &dc)
   dc = fminf(0.95f, fmaxf(0.05f, dc));
 }
 
-float PI::update(float error, float dt) {
+float PIController::update(float error, float dt) {
   float p = kp * error;
   integral += ki * error * dt;
   if (integral > limit) integral = limit;
