@@ -1,0 +1,7 @@
+{
+  "name": "ESCBoard",
+  "version": "1.0.0",
+  "description": "Driver edukasional PCB ESC Rev.E STM32F401 + IR2110",
+  "frameworks": ["arduino"],
+  "platforms": ["ststm32"]
+}
