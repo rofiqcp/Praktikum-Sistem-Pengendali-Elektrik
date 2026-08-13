@@ -1,0 +1,15 @@
+symbol,address,physical_terminal,type,normal_state,description
+START_PB,,,DI,0,START push button
+STOP_OK,,,DI,1,NC stop circuit healthy
+FWD_SEL,,,DI,0,Forward selector
+REV_SEL,,,DI,0,Reverse selector
+SPEED_BIT0,,,DI,0,Multi-speed select bit 0
+SPEED_BIT1,,,DI,0,Multi-speed select bit 1
+VFD_OK,,,DI,1,VFD healthy permit
+ESTOP_OK,,,DI,1,Emergency stop healthy
+DO_FWD,,,DO,0,VFD forward digital input
+DO_REV,,,DO,0,VFD reverse digital input
+DO_MS0,,,DO,0,VFD multi-speed bit 0
+DO_MS1,,,DO,0,VFD multi-speed bit 1
+LAMP_RUN,,,DO,0,Run indicator
+LAMP_FAULT,,,DO,0,Fault/interlock indicator

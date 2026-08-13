@@ -1,12 +1,36 @@
-(* Generic IEC 61131-3 scaling. Sesuaikan raw AO PLC aktual. *)
+(*
+  P3 reference Structured Text.
+  RAW_MIN/RAW_MAX MUST be taken from the actual WECON analog output manual.
+*)
 VAR
-  PercentCmd : REAL; (* 0..100 *)
-  Current_mA : REAL;
-  Frequency_Hz : REAL;
+  F_CMD_HZ   : REAL;
+  F_MIN_HZ   : REAL := 0.0;
+  F_MAX_HZ   : REAL := 50.0;
+  I_CMD_MA   : REAL;
+  NORM       : REAL;
+  RAW_MIN    : DINT := 0;      (* replace from manual *)
+  RAW_MAX    : DINT := 4000;   (* replace from manual/example only *)
+  AO_RAW     : DINT;
+  I_MEAS_MA  : REAL;
+  BELOW_RANGE : BOOL;
+  ABOVE_RANGE : BOOL;
 END_VAR
 
-IF PercentCmd < 0.0 THEN PercentCmd := 0.0; END_IF;
-IF PercentCmd > 100.0 THEN PercentCmd := 100.0; END_IF;
-Current_mA := 4.0 + 16.0 * PercentCmd / 100.0;
-Frequency_Hz := 50.0 * PercentCmd / 100.0;
-(* Konversikan Current_mA ke raw analog output sesuai manual modul AO WECON. *)
+(* Clamp frequency command *)
+IF F_CMD_HZ < F_MIN_HZ THEN
+  F_CMD_HZ := F_MIN_HZ;
+ELSIF F_CMD_HZ > F_MAX_HZ THEN
+  F_CMD_HZ := F_MAX_HZ;
+END_IF;
+
+IF F_MAX_HZ > F_MIN_HZ THEN
+  NORM := (F_CMD_HZ - F_MIN_HZ) / (F_MAX_HZ - F_MIN_HZ);
+ELSE
+  NORM := 0.0;
+END_IF;
+
+I_CMD_MA := 4.0 + 16.0 * NORM;
+AO_RAW := RAW_MIN + REAL_TO_DINT(NORM * DINT_TO_REAL(RAW_MAX - RAW_MIN));
+
+BELOW_RANGE := I_MEAS_MA < 4.0;
+ABOVE_RANGE := I_MEAS_MA > 20.0;
