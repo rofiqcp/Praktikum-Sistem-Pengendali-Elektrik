@@ -1,6 +1,6 @@
-# STM32F401CCU6 untuk Praktikum Sistem Pengendali Elektrik
+# STM32F401CCU6 pada PCB ESC Rev.E
 
-Board utama praktikum adalah WeAct BlackPill V2.0 berbasis STM32F401CCU6.
+MCU praktikum adalah STM32F401CCU6 Black Pill yang dipasang sebagai module plug-in pada PCB ESC Rev.E.
 
 ## PlatformIO
 
@@ -13,28 +13,42 @@ upload_protocol = stlink
 monitor_speed = 115200
 ```
 
-Spesifikasi utama: Cortex-M4F 84 MHz, Flash 256 KB, SRAM 64 KB, ADC 12-bit, DMA, advanced timer TIM1 untuk PWM motor-control, serta timer umum yang dapat dipakai sebagai encoder interface.
+## Pin yang benar untuk PCB Rev.E
 
-## Pin praktikum yang disarankan
-
-| Fungsi | Pin | Catatan |
+| Fungsi | Pin STM32F401 | Peripheral |
 |---|---|---|
-| TIM1_CH1 | PA8 | PWM fase U / PWM BTS7960 |
-| TIM1_CH2 | PA9 | PWM fase V |
-| TIM1_CH3 | PA10 | PWM fase W |
-| TIM1_CH1N | PB13 | PWM low-side U |
-| TIM1_CH2N | PB14 | PWM low-side V |
-| TIM1_CH3N | PB15 | PWM low-side W |
-| Hall A/B/C | PB6/PB7/PB8 | Input digital; sesuaikan PCB |
-| ADC arus U/V | PA0/PA1 | Maksimum 3.3 V |
-| ADC Vbus | PA2 | Wajib divider tegangan |
-| UART debug | PA2/PA3 atau USB serial | Hindari konflik ADC Vbus |
+| Phase A high | PA8 | TIM1_CH1 |
+| Phase A low | PB13 | TIM1_CH1N |
+| Phase B high | PA9 | TIM1_CH2 |
+| Phase B low | PB14 | TIM1_CH2N |
+| Phase C high | PA10 | TIM1_CH3 |
+| Phase C low | PB15 | TIM1_CH3N |
+| Gate-driver shutdown | PA12 | GPIO, HIGH=shutdown |
+| Current IA | PA0 | ADC |
+| Current IB | PA1 | ADC |
+| Current IDC | PA4 | ADC |
+| VBUS | PA5 | ADC |
+| Throttle | PA6 | ADC |
+| Brake | PA7 | ADC |
+| Hall A / Encoder A | PB6 | GPIO / TIM4_CH1 |
+| Hall B / Encoder B | PB7 | GPIO / TIM4_CH2 |
+| Hall C / Encoder Index | PB2 | GPIO/EXTI |
+| USART debug TX/RX | PA2/PA3 | USART2 |
+| CAN MCP2515 SPI | PB3/PB4/PB5 | SPI3 |
+| CAN CS | PB12 | GPIO |
+| CAN INT | PA15 | GPIO/EXTI |
+| I2C | PB8/PB9 | I2C1 |
 
-> Pin harus disesuaikan dengan PCB final. Jangan menghubungkan tegangan gate-driver, tegangan motor, atau 12/220 VAC langsung ke GPIO STM32.
+> PA9/PA10 dipakai power-stage PWM dan PA12 dipakai `DRV_SD`, sehingga contoh praktikum tidak memakai UART/USB yang berpotensi bentrok dengan pin tersebut. Debug diarahkan ke USART2 PA2/PA3.
 
-## Aturan keselamatan
+## Timer motor-control
 
-1. Uji algoritma dengan supply rendah dan current limit sebelum menghubungkan motor besar.
-2. Gunakan gate driver terisolasi/tepat level untuk inverter.
-3. Selalu sediakan dead-time, hardware shutdown, fuse, emergency stop, dan pre-charge bila diperlukan.
-4. Praktikum 220 VAC hanya dilakukan pada meja uji terlindung dengan pengawasan dosen/laboran.
+Library `ESCBoard` mengkonfigurasi TIM1 center-aligned dengan tiga pasangan complementary output. Dead-time dimasukkan melalui register BDTR. Firmware selalu menjaga `DRV_SD` HIGH selama konfigurasi ulang timer.
+
+## Analog nominal Rev.E
+
+- Shunt: 2 mΩ.
+- Gain current amplifier LM358: ≈20.
+- Sensitivitas ideal current: ≈40 mV/A.
+- VBUS divider: ≈21:1.
+- Zero current: dikalibrasi saat startup; jangan hard-code 1.65 V sebagai hasil akhir.
