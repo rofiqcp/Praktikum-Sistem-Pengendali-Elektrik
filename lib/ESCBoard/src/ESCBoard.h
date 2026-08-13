@@ -28,7 +28,7 @@ public:
   static bool isShutdown();
 
   static void setThreePhaseDuty(float da, float db, float dc);
-  static void setHBridge(float command); // -1..+1, Phase A-B
+  static void setHBridge(float command);
   static void setSinglePhaseSPWM(float modulation, float electricalAngle);
   static void floatAll();
   static void sixStep(uint8_t sector, float duty);
@@ -77,6 +77,8 @@ void park(float alpha, float beta, float theta, float &id, float &iq);
 void invPark(float vd, float vq, float theta, float &alpha, float &beta);
 void svpwm(float alpha, float beta, float vbus, float &da, float &db, float &dc);
 
+#pragma push_macro("PI")
+#undef PI
 class PI {
 public:
   PI(float kp = 0, float ki = 0, float limit = 1) : kp(kp), ki(ki), limit(limit) {}
@@ -86,5 +88,6 @@ public:
 private:
   float integral = 0;
 };
+#pragma pop_macro("PI")
 
 } // namespace ESC
