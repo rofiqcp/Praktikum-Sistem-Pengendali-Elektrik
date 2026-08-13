@@ -1,1 +1,0 @@
-Expansion work for Module 02 is prepared in this branch.
